@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Station - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h3 class="mb-4">Edit Station: {{ station.name }}</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Station Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ station.name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Location (Tamil Nadu)</label>
+                    <input type="text" name="location" class="form-control" value="{{ station.location }}" required>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Latitude</label>
+                        <input type="text" name="latitude" id="lat-input" class="form-control" value="{{ station.latitude or '' }}" placeholder="e.g. 13.0827">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Longitude</label>
+                        <input type="text" name="longitude" id="lng-input" class="form-control" value="{{ station.longitude or '' }}" placeholder="e.g. 80.2707">
+                    </div>
+                </div>
+                <div id="map-picker" class="mb-3 border border-secondary rounded-3" style="height: 300px;"></div>
+                <p class="text-secondary small mb-3"><i class="fas fa-info-circle me-1"></i>Click on the map or drag the marker to update coordinates</p>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Update Station</button>
+                    <a href="{{ url_for('admin.stations') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+            <form method="POST" action="{{ url_for('admin.delete_station', station_id=station.id) }}" class="mt-3" onsubmit="return confirm('Delete this station and all related data?');">
+                <button type="submit" class="btn btn-danger w-100">Delete Station</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function initMap() {
+        const initialPosition = {
+            lat: {{ station.latitude or 11.1271 }},
+            lng: {{ station.longitude or 78.6569 }}
+        };
+        const map = new google.maps.Map(document.getElementById('map-picker'), {
+            zoom: 10,
+            center: initialPosition,
+        });
+        const marker = new google.maps.Marker({
+            position: initialPosition,
+            map: map,
+            draggable: true,
+        });
+
+        function updateInputs(latLng) {
+            document.getElementById('lat-input').value = latLng.lat().toFixed(6);
+            document.getElementById('lng-input').value = latLng.lng().toFixed(6);
+        }
+
+        map.addListener('click', function(event) {
+            marker.setPosition(event.latLng);
+            updateInputs(event.latLng);
+        });
+        marker.addListener('dragend', function(event) {
+            updateInputs(event.latLng);
+        });
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_api_key }}&callback=initMap"></script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-auto">
+        <img src="{{ url_for('static', filename='uploads/' + (current_user.profile_pic or 'default_profile.png')) }}" 
+             class="rounded-circle border border-secondary p-1" width="60" height="60" style="object-fit: cover;">
+    </div>
+    <div class="col">
+        <h2 class="mb-0">Welcome back, {{ current_user.username }}!</h2>
+        <p class="text-secondary mb-0">{{ current_user.vehicle_no }} • EV Registered</p>
+    </div>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <span class="value">{{ total_bookings }}</span>
+        <span class="label">Total Bookings</span>
+    </div>
+    <div class="stat-card">
+        <span class="value">{{ active_bookings }}</span>
+        <span class="label">Active Sessions</span>
+    </div>
+    <div class="stat-card">
+        <span class="value">Tamil Nadu</span>
+        <span class="label">Primary Region</span>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <h3>Quick Actions</h3>
+            <div class="list-group list-group-flush bg-transparent">
+                <a href="{{ url_for('user.booking') }}" class="list-group-item bg-transparent text-primary border-secondary">
+                    <i class="fas fa-plus-circle me-2"></i>Book New Slot
+                </a>
+                <a href="{{ url_for('user.track') }}" class="list-group-item bg-transparent text-primary border-secondary">
+                    <i class="fas fa-search-location me-2"></i>Find Nearby Stations
+                </a>
+                <a href="{{ url_for('user.history') }}" class="list-group-item bg-transparent text-primary border-secondary">
+                    <i class="fas fa-history me-2"></i>View Booking History
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 d-flex flex-column justify-content-center align-items-center text-center">
+            <i class="fas fa-leaf fa-3x mb-3" style="color: var(--success-color);"></i>
+            <h3>Your Impact</h3>
+            <p class="text-secondary">You've saved roughly 150kg of CO2 by using EV charging!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

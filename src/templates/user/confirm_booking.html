@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Booking - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h3 class="mb-4">Confirm Your Booking</h3>
+            <div class="mb-4">
+                <h5><strong>Branch:</strong> {{ slot.branch_name }}</h5>
+                <p class="text-secondary">{{ slot.station.name }}, {{ slot.station.location }}</p>
+                <p><strong>Vehicle Type:</strong> {{ slot.type }}</p>
+                <p><strong>Operating Hours:</strong> {{ slot.branch.open_time.strftime('%H:%M') if slot.branch else '06:00' }} - {{ slot.branch.close_time.strftime('%H:%M') if slot.branch else '22:00' }}</p>
+                <p><strong>Price per Hour:</strong> ₹{% if slot.type == '2W' %}{{ slot.branch.price_2w_per_hour if slot.branch else 0.0 }}{% else %}{{ slot.branch.price_4w_per_hour if slot.branch else 0.0 }}{% endif %}</p>
+                <p><strong>Duration:</strong> 1 hour</p>
+                <p><strong>Total Cost:</strong> ₹{% if slot.type == '2W' %}{{ slot.branch.price_2w_per_hour if slot.branch else 0.0 }}{% else %}{{ slot.branch.price_4w_per_hour if slot.branch else 0.0 }}{% endif %}</p>
+            </div>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Select Date</label>
+                    <input type="date" name="booking_date" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Start Time</label>
+                    <input type="time" name="booking_time" class="form-control" required>
+                </div>
+                <p class="text-secondary small">Note: Booking duration is 1 hour. Ensure the time is within operating hours.</p>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+                    <a href="{{ url_for('user.booking') }}" class="btn btn-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

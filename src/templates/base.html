@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EV Charge{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='1.2') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-bolt me-2"></i>EV Charge
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'user' %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.dashboard') }}">Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.booking') }}">Booking</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.history') }}">Past Bookings</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.track') }}">Track</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.feedback') }}">Feedback</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('user.profile') }}"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
+                        {% elif current_user.role == 'admin' %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Stats</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.stations') }}">Stations</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.slots') }}">Slots</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.history') }}">Past Bookings</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.feedback') }}">Reviews</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.profile') }}"><i class="fas fa-user-shield me-1"></i>Profile</a></li>
+                        {% endif %}
+
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('user.logout' if current_user.role == 'user' else 'admin.logout') }}">Logout</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('user.login') }}">User Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.login') }}">Admin Login</a></li>
+                    {% endif %}
+                    <li class="nav-item dropdown ms-2">
+                        <a class="nav-link dropdown-toggle" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-palette me-1"></i>Theme
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown">
+                            <li><button class="dropdown-item theme-option" type="button" data-theme="default">Dark</button></li>
+                            <li><button class="dropdown-item theme-option" type="button" data-theme="light">Light</button></li>
+                            <li><button class="dropdown-item theme-option" type="button" data-theme="ocean">Ocean</button></li>
+                            <li><button class="dropdown-item theme-option" type="button" data-theme="sunset">Sunset</button></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeStorageKey = 'evchargeTheme';
+            const themeButtons = document.querySelectorAll('.theme-option');
+            const defaultTheme = 'default';
+            const selectedTheme = localStorage.getItem(themeStorageKey) || defaultTheme;
+
+            function applyTheme(theme) {
+                document.documentElement.dataset.theme = theme;
+                localStorage.setItem(themeStorageKey, theme);
+                themeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === theme);
+                });
+            }
+
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    applyTheme(this.dataset.theme);
+                });
+            });
+
+            applyTheme(selectedTheme);
+        });
+    </script>
+</body>
+</html>

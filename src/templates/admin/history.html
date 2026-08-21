@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Booking History - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-between align-items-center mb-4">
+    <div class="col">
+        <h2>Booking History</h2>
+        <p class="text-secondary">Track past completed charging sessions with live filtering and analysis.</p>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-primary active">Filter</button>
+            <a href="{{ url_for('admin.history_analysis') }}" class="btn btn-sm btn-outline-secondary">Analysis</a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+     <div class="card-body">
+                <p class="text-muted mb-1">Total completed bookings</p>
+                <h3 id="result-count" class="mb-0">{{ bookings|length }}</h3>
+            </div>
+    <div class="card-body">
+        <form id="filter-form" class="row g-3 align-items-end">
+            <input type="hidden" name="status" value="Completed">
+            <div class="col-md-3">
+                <label for="userFilter" class="form-label">User</label>
+                <input type="text" id="userFilter" name="user" class="form-control form-control-sm" placeholder="Search user" value="{{ user_filter or '' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="stationFilter" class="form-label">Station</label>
+                <input type="text" id="stationFilter" name="station" class="form-control form-control-sm" placeholder="Search station" value="{{ station_filter or '' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="dateFromFilter" class="form-label">From</label>
+                <input type="date" id="dateFromFilter" name="date_from" class="form-control form-control-sm" value="{{ date_from or '' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="dateToFilter" class="form-label">To</label>
+                <input type="date" id="dateToFilter" name="date_to" class="form-control form-control-sm" value="{{ date_to or '' }}">
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table" id="history-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-charging-station me-2"></i>Branch</th>
+                    <th><i class="fas fa-user me-2"></i>User</th>
+                    <th><i class="fas fa-car me-2"></i>Vehicle Type</th>
+                    <th><i class="fas fa-car me-2"></i>Vehicle Number</th>
+                    <th><i class="fas fa-calendar-alt me-2"></i>Scheduled Time</th>
+                    <th><i class="fas fa-rupee-sign me-2"></i>Cost</th>
+                    <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                {% for booking in bookings %}
+                <tr>
+                    <td class="fw-bold">{{ booking.slot.branch_name }}</td>
+                    <td class="fw-bold">{{ booking.user.username }}</td>
+                    <td><span class="badge bg-primary px-3">{{ booking.vehicle_type }}</span></td>
+                    <td class="fw-bold">{{ booking.user.vehicle_no }}</td>
+                    <td class="text-secondary">
+                        {% if booking.scheduled_start %}
+                            {{ booking.scheduled_start.strftime('%b %d, %Y %H:%M') }} - {{ booking.scheduled_end.strftime('%H:%M') }}
+                        {% else %}
+                            {{ booking.booking_time.strftime('%b %d, %Y') }}
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-success">₹{{ booking.total_cost or 0 }}</td>
+                    <td>
+                        {% if booking.status == 'Completed' %}
+                            <span class="badge bg-secondary py-2 px-3"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                        {% else %}
+                            <span class="badge bg-danger py-2 px-3">{{ booking.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr id="no-results-row">
+                    <td colspan="7" class="text-center py-5">
+                        <i class="fas fa-history fa-3x mb-3 text-secondary opacity-50"></i>
+                        <p class="text-secondary">No bookings found yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function debounce(fn, delay = 250) {
+    let timeout = null;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function renderBookings(data) {
+    const tbody = document.getElementById('history-body');
+    const resultCount = document.getElementById('result-count');
+    tbody.innerHTML = '';
+    resultCount.textContent = data.total_count;
+
+    if (!data.bookings.length) {
+        tbody.innerHTML = `
+            <tr id="no-results-row">
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-history fa-3x mb-3 text-secondary opacity-50"></i>
+                    <p class="text-secondary">No bookings match this filter.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    for (const booking of data.bookings) {
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td class="fw-bold">${booking.station}</td>
+                <td class="fw-bold">${booking.user}</td>
+                <td><span class="badge bg-primary px-3">${booking.vehicle_type}</span></td>
+                <td class="fw-bold">${booking.vehicle_no || ''}</td>
+                <td class="text-secondary">${booking.scheduled_start}${booking.scheduled_end ? ' - ' + booking.scheduled_end : ''}</td>
+                <td class="fw-bold text-success">₹${booking.total_cost}</td>
+                <td><span class="badge bg-secondary py-2 px-3"><i class="fas fa-check-circle me-1"></i>${booking.status}</span></td>
+            </tr>
+        `);
+    }
+}
+
+async function fetchHistory() {
+    const form = document.getElementById('filter-form');
+    const params = new URLSearchParams(new FormData(form));
+    const response = await fetch('{{ url_for('admin.history_data') }}?' + params.toString(), {
+        headers: { 'Accept': 'application/json' }
+    });
+    if (!response.ok) {
+        return;
+    }
+    const data = await response.json();
+    renderBookings(data);
+}
+
+const filterForm = document.getElementById('filter-form');
+if (filterForm) {
+    filterForm.addEventListener('submit', event => {
+        event.preventDefault();
+        fetchHistory();
+    });
+    filterForm.addEventListener('input', debounce(fetchHistory, 350));
+}
+</script>
+{% endblock %}

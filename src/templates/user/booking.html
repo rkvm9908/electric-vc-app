@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Book Charging Slot - EV Charge{% endblock %}
+
+{% block content %}
+<div class="card p-4 mb-4">
+    <h2 class="mb-4">Select Your Charging Slot</h2>
+    <form method="GET" class="row g-3">
+        <div class="col-md-5">
+            <label class="form-label">Vehicle Type</label>
+            <select name="vehicle_type" class="form-select">
+                <option value="" {{ 'selected' if not selected_vehicle }}>All Types</option>
+                <option value="2W" {{ 'selected' if selected_vehicle == '2W' }}>2-Wheeler</option>
+                <option value="4W" {{ 'selected' if selected_vehicle == '4W' }}>4-Wheeler</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Branch</label>
+            <select name="branch_id" class="form-select">
+                <option value="" {{ 'selected' if not selected_branch_id }}>All Branches</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}" {{ 'selected' if selected_branch_id == branch.id|string }}>{{ branch.branch_label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Show Branch Slots</button>
+        </div>
+    </form>
+</div>
+
+{% if selected_branch %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-2">{{ selected_branch.branch_label }}</h4>
+                    <p class="mb-1 text-secondary"><i class="fas fa-map-marker-alt me-1"></i>{{ selected_branch.location or 'Location not set' }}</p>
+                    <p class="mb-1"><strong>Operating Hours:</strong> {{ selected_branch.open_time.strftime('%H:%M') if selected_branch.open_time else '06:00' }} - {{ selected_branch.close_time.strftime('%H:%M') if selected_branch.close_time else '22:00' }}</p>
+                    <p class="mb-1"><strong>Capacity:</strong> {{ selected_branch.slots_2w_total }} x 2W, {{ selected_branch.slots_4w_total }} x 4W</p>
+                    <p class="mb-0"><strong>Available Now:</strong> {{ available_2w }} x 2W, {{ available_4w }} x 4W ({{ total_available }} total)</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-info text-dark">Book this branch</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="mb-4">Complete Your Booking</h4>
+            <form method="POST" class="row g-3">
+                <input type="hidden" name="branch_id" value="{{ selected_branch.id }}">
+                <div class="col-md-6">
+                    <label class="form-label">Vehicle Type</label>
+                    <select name="vehicle_type" class="form-select" required>
+                        <option value="" {{ 'selected' if not selected_vehicle }}>Choose vehicle type</option>
+                        <option value="2W" {{ 'selected' if selected_vehicle == '2W' }}>2-Wheeler</option>
+                        <option value="4W" {{ 'selected' if selected_vehicle == '4W' }}>4-Wheeler</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Booking Date</label>
+                    <input type="date" name="booking_date" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Booking Time</label>
+                    <input type="time" name="booking_time" class="form-control" required>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for item in branch_summaries %}
+            <div class="col">
+                <div class="card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">{{ item.branch.branch_label }}</h5>
+                            <p class="text-secondary small mb-1">{{ item.branch.location or 'Location not set' }}</p>
+                            <p class="mb-0"><strong>Available:</strong> {{ item.total_available }}</p>
+                        </div>
+                        <a href="{{ url_for('user.booking', branch_id=item.branch.id, vehicle_type=selected_vehicle) }}" class="btn btn-outline-primary">Book</a>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3 mb-2">
+                                <div class="text-muted small">2W Available</div>
+                                <div class="h4 mb-0">{{ item.available_2w }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3 mb-2">
+                                <div class="text-muted small">4W Available</div>
+                                <div class="h4 mb-0">{{ item.available_4w }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3 mb-2">
+                                <div class="text-muted small">Total</div>
+                                <div class="h4 mb-0">{{ item.total_available }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

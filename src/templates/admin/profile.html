@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Profile - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">Admin Profile</h2>
+            <div class="text-center mb-4">
+                <i class="fas fa-user-shield fa-5x text-accent"></i>
+                <h3 class="mt-3">{{ current_user.username }}</h3>
+                <p class="text-secondary">System Administrator</p>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="text" class="form-control" value="{{ current_user.email }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <input type="text" class="form-control" value="Full Authority" readonly>
+            </div>
+            <hr class="border-secondary mt-4 mb-4">
+            <a href="{{ url_for('admin.logout') }}" class="btn btn-outline-danger w-100">Secure Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

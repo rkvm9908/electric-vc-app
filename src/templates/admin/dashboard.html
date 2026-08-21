@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col">
+        <h2 class="mb-0">Admin Overview</h2>
+        <p class="text-secondary">System-wide statistics and performance metrics.</p>
+    </div>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <span class="value">{{ stats.total_users }}</span>
+        <span class="label">Users</span>
+    </div>
+    <div class="stat-card">
+        <span class="value">{{ stats.total_stations }}</span>
+        <span class="label">Stations</span>
+    </div>
+    <div class="stat-card">
+        <span class="value">{{ stats.pending_feedbacks }}</span>
+        <span class="label">Reviews</span>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-md-12">
+<div class="card">
+ <h3> Booking Statistics</h3>
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <span class="value">{{ stats.total_bookings }}</span>
+        <span class="label">Total Bookings</span>
+    </div>
+     <div class="stat-card">
+        <span class="value">{{ stats.confirmed_bookings }}</span>
+        <span class="label">Confirmed Bookings</span>
+    </div>
+    <div class="stat-card">
+        <span class="value">{{ stats.completed_bookings }}</span>
+        <span class="label">Completed Bookings</span>
+    </div>
+</div>
+</div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <h3>Quick Management</h3>
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <a href="{{ url_for('admin.stations') }}" class="btn btn-outline-primary w-100 py-3">
+                        <i class="fas fa-charging-station d-block mb-2 fa-2x"></i>
+                        Stations
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('admin.slots') }}" class="btn btn-outline-primary w-100 py-3">
+                        <i class="fas fa-clock d-block mb-2 fa-2x"></i>
+                        Monitor Slots
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('admin.feedback') }}" class="btn btn-outline-primary w-100 py-3">
+                        <i class="fas fa-comment-alt d-block mb-2 fa-2x"></i>
+                        Feedback
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('admin.profile') }}" class="btn btn-outline-primary w-100 py-3">
+                        <i class="fas fa-user-cog d-block mb-2 fa-2x"></i>
+                         Profile Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

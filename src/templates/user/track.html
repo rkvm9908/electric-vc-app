@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Track Branches - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h3>Nearby Branches</h3>
+            <p class="text-secondary small">Showing branches across Tamil Nadu.</p>
+            <div class="list-group list-group-flush bg-transparent" style="max-height: 500px; overflow-y: auto;">
+                {% for branch in branches %}
+                {% if branch.latitude and branch.longitude %}
+                <div class="list-group-item bg-transparent border-secondary py-3 branch-item" data-lat="{{ branch.latitude }}" data-lng="{{ branch.longitude }}" style="cursor: pointer;">
+                    <h6 class="mb-1 text-accent">{{ branch.branch_label }}</h6>
+                    <p class="mb-0 small text-secondary"><i class="fas fa-map-marker-alt me-1"></i>{{ branch.location or branch.station.location }}</p>
+                    <div class="mt-2">
+                        <span class="badge bg-primary text-white">{{ branch_totals[branch.id]['2w'] if branch.id in branch_totals else 0 }} 2W Available</span>
+                        <span class="badge bg-success text-white">{{ branch_totals[branch.id]['4w'] if branch.id in branch_totals else 0 }} 4W Available</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card p-0 overflow-hidden" style="height: 600px; background: #1a1a1a; position: relative;">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+            <div class="position-absolute bottom-0 start-0 p-3 w-100 bg-dark border-top border-secondary" style="z-index: 1000;">
+                <span class="text-success"><i class="fas fa-circle me-2 small"></i>Live Map: Tamil Nadu Region</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Maps Integration -->
+<script>
+    function initMap() {
+        const tnCenter = { lat: 11.1271, lng: 78.6569 };
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 7,
+            center: tnCenter,
+            styles: [
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            ]
+        });
+
+        const branches = [
+            {% for branch in branches %}
+                {% if branch.latitude and branch.longitude %}
+                {
+                    name: "{{ branch.branch_label }}",
+                    lat: {{ branch.latitude }},
+                    lng: {{ branch.longitude }},
+                    location: "{{ branch.location or branch.station.location }}",
+                    slots_2w: {{ branch_totals[branch.id]['2w'] if branch.id in branch_totals else 0 }},
+                    slots_4w: {{ branch_totals[branch.id]['4w'] if branch.id in branch_totals else 0 }}
+                },
+                {% endif %}
+            {% endfor %}
+        ];
+
+        const infoWindow = new google.maps.InfoWindow();
+
+        branches.forEach(branch => {
+            const marker = new google.maps.Marker({
+                position: { lat: branch.lat, lng: branch.lng },
+                map: map,
+                title: branch.name,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: "#3897f0",
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: "#ffffff",
+                }
+            });
+
+            marker.addListener("click", () => {
+                const contentText = `
+                    <div style="color: #000; padding: 10px;">
+                        <h6 style="margin: 0 0 5px 0; color: #3897f0;">${branch.name}</h6>
+                        <p style="margin: 0 0 10px 0; font-size: 0.9rem;">${branch.location}</p>
+                        <hr style="margin: 5px 0;">
+                        <div style="font-size: 0.8rem; font-weight: bold;">
+                            2W Available: ${branch.slots_2w} <br>
+                            4W Available: ${branch.slots_4w}
+                        </div>
+                    </div>
+                `;
+                infoWindow.setContent(contentText);
+                infoWindow.open(map, marker);
+                map.setCenter(marker.getPosition());
+                map.setZoom(15);
+            });
+        });
+
+        document.querySelectorAll('.branch-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const lat = parseFloat(item.dataset.lat);
+                const lng = parseFloat(item.dataset.lng);
+                map.setCenter({ lat, lng });
+                map.setZoom(15);
+            });
+        });
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_api_key }}&callback=initMap"></script>
+{% endblock %}

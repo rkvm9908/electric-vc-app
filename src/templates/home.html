@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-3 fw-bold mb-4" style="color: var(--accent-color);">Revolutionize Your EV Experience</h1>
+    <p class="lead mb-5 text-secondary">Book your charging slot effortlessly across Tamil Nadu's premium network.</p>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('user.register') }}" class="btn btn-primary btn-lg px-5">Get Started</a>
+        <a href="{{ url_for('user.login') }}" class="btn btn-outline-primary btn-lg px-5">Login</a>
+    </div>
+</div>
+
+<div class="dashboard-grid mt-5">
+    <div class="card text-center p-4">
+        <i class="fas fa-map-marker-alt fa-3x mb-3" style="color: var(--accent-color);"></i>
+        <h3>Track Stations</h3>
+        <p class="text-secondary">Find stations surrounding you in real-time across Tamil Nadu.</p>
+    </div>
+    <div class="card text-center p-4">
+        <i class="fas fa-calendar-check fa-3x mb-3" style="color: var(--success-color);"></i>
+        <h3>Quick Booking</h3>
+        <p class="text-secondary">Reserve 2W and 4W slots with zero waiting time.</p>
+    </div>
+    <div class="card text-center p-4">
+        <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--accent-color);"></i>
+        <h3>Secure Network</h3>
+        <p class="text-secondary">Verified stations with top-notch safety and support.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Stations Management - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-4">
+            <h3 class="mb-4">Add New Station</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Station Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. GreenCharge Hub" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Location (Tamil Nadu)</label>
+                    <input type="text" name="location" class="form-control" placeholder="e.g. T-Nagar, Chennai" required>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Latitude</label>
+                        <input type="text" name="latitude" id="lat-input" class="form-control" placeholder="e.g. 13.0827">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Longitude</label>
+                        <input type="text" name="longitude" id="lng-input" class="form-control" placeholder="e.g. 80.2707">
+                    </div>
+                </div>
+                
+                <div id="map-picker" class="mb-3 border border-secondary rounded-3" style="height: 300px;"></div>
+                <p class="text-secondary small mb-3"><i class="fas fa-info-circle me-1"></i>Click on the map to auto-fill coordinates</p>
+
+                <button type="submit" class="btn btn-primary w-100">Initialize Station</button>
+            </form>
+        </div>
+        <div class="card p-4 mt-4">
+            <h3 class="mb-4">Add New Branch</h3>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="branch">
+                <div class="mb-3">
+                    <label class="form-label">Parent Station</label>
+                    <select name="branch_station_id" class="form-select" required>
+                        <option value="" disabled selected>Select Station</option>
+                        {% for station in stations %}
+                            <option value="{{ station.id }}">{{ station.branch_label }} ({{ station.location }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Branch Name</label>
+                    <input type="text" name="branch_name" class="form-control" placeholder="e.g. North Chennai Branch" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Branch Location</label>
+                    <input type="text" name="branch_location" class="form-control" placeholder="e.g. T-Nagar, Chennai">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">2W Slots</label>
+                        <input type="number" name="branch_slots_2w" class="form-control" value="5" min="0" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">4W Slots</label>
+                        <input type="number" name="branch_slots_4w" class="form-control" value="5" min="0" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">2W Price per Hour (₹)</label>
+                        <input type="number" name="branch_price_2w" class="form-control" value="20.0" step="0.01" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">4W Price per Hour (₹)</label>
+                        <input type="number" name="branch_price_4w" class="form-control" value="50.0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Opening Time</label>
+                        <input type="time" name="branch_open_time" class="form-control" value="06:00" required>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Closing Time</label>
+                        <input type="time" name="branch_close_time" class="form-control" value="22:00" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Latitude</label>
+                        <input type="text" name="branch_latitude" id="branch-lat-input" class="form-control" placeholder="e.g. 13.0827">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Longitude</label>
+                        <input type="text" name="branch_longitude" id="branch-lng-input" class="form-control" placeholder="e.g. 80.2707">
+                    </div>
+                </div>
+                <div id="branch-map-picker" class="mb-3 border border-secondary rounded-3" style="height: 300px;"></div>
+                <p class="text-secondary small mb-3"><i class="fas fa-info-circle me-1"></i>Click on the branch map to auto-fill branch coordinates</p>
+                <button type="submit" class="btn btn-secondary w-100">Add Branch</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h3 class="mb-4">Active Stations</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for station in stations %}
+                        <tr>
+                            <td>{{ station.name }}</td>
+                            <td>{{ station.location }}</td>
+                            <td><a href="{{ url_for('admin.edit_station', station_id=station.id) }}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary">No stations found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card p-4 mt-4">
+            <h3 class="mb-4">Station Branches</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Branch Name</th>
+                            <th>Station</th>
+                            <th>Location</th>
+                            <th>2W Slots</th>
+                            <th>4W Slots</th>
+                            <th>Pricing</th>
+                            <th>Operating Hours</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for branch in branches %}
+                        <tr>
+                            <td>{{ branch.name }}</td>
+                            <td>{{ branch.station.name }}</td>
+                            <td>{{ branch.location or '—' }}</td>
+                            <td><span class="badge bg-dark">{{ branch.slots_2w_total }}</span></td>
+                            <td><span class="badge bg-dark">{{ branch.slots_4w_total }}</span></td>
+                            <td>2W: ₹{{ branch.price_2w_per_hour }}/hr<br>4W: ₹{{ branch.price_4w_per_hour }}/hr</td>
+                            <td>{{ branch.open_time.strftime('%H:%M') }} - {{ branch.close_time.strftime('%H:%M') }}</td>
+                            <td><a href="{{ url_for('admin.edit_branch', branch_id=branch.id) }}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-secondary">No branches added yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Map Picker Script -->
+<script>
+    let map, marker, branchMap, branchMarker;
+    function initMap() {
+        const tnCenter = { lat: 11.1271, lng: 78.6569 };
+        map = new google.maps.Map(document.getElementById("map-picker"), {
+            zoom: 6,
+            center: tnCenter,
+            styles: [{ elementType: "geometry", stylers: [{ color: "#242f3e" }] }]
+        });
+        branchMap = new google.maps.Map(document.getElementById("branch-map-picker"), {
+            zoom: 6,
+            center: tnCenter,
+            styles: [{ elementType: "geometry", stylers: [{ color: "#242f3e" }] }]
+        });
+
+        marker = new google.maps.Marker({
+            map: map,
+            draggable: true,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#3897f0",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff",
+            }
+        });
+        branchMarker = new google.maps.Marker({
+            map: branchMap,
+            draggable: true,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#f59e0b",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff",
+            }
+        });
+
+        map.addListener("click", (e) => {
+            updateStationPosition(e.latLng);
+        });
+        branchMap.addListener("click", (e) => {
+            updateBranchPosition(e.latLng);
+        });
+
+        marker.addListener("dragend", (e) => {
+            updateStationPosition(e.latLng);
+        });
+        branchMarker.addListener("dragend", (e) => {
+            updateBranchPosition(e.latLng);
+        });
+
+        function updateStationPosition(latLng) {
+            marker.setPosition(latLng);
+            document.getElementById("lat-input").value = latLng.lat().toFixed(6);
+            document.getElementById("lng-input").value = latLng.lng().toFixed(6);
+        }
+
+        function updateBranchPosition(latLng) {
+            branchMarker.setPosition(latLng);
+            document.getElementById("branch-lat-input").value = latLng.lat().toFixed(6);
+            document.getElementById("branch-lng-input").value = latLng.lng().toFixed(6);
+        }
+
+        const syncStationMap = () => {
+            const lat = parseFloat(document.getElementById("lat-input").value);
+            const lng = parseFloat(document.getElementById("lng-input").value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                const pos = { lat, lng };
+                marker.setPosition(pos);
+                map.setCenter(pos);
+            }
+        };
+        const syncBranchMap = () => {
+            const lat = parseFloat(document.getElementById("branch-lat-input").value);
+            const lng = parseFloat(document.getElementById("branch-lng-input").value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                const pos = { lat, lng };
+                branchMarker.setPosition(pos);
+                branchMap.setCenter(pos);
+            }
+        };
+
+        document.getElementById("lat-input").addEventListener("change", syncStationMap);
+        document.getElementById("lng-input").addEventListener("change", syncStationMap);
+        document.getElementById("branch-lat-input").addEventListener("change", syncBranchMap);
+        document.getElementById("branch-lng-input").addEventListener("change", syncBranchMap);
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_api_key }}&callback=initMap"></script>
+{% endblock %}

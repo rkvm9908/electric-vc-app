@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}View Feedback - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4 bg-dark border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center border-end border-secondary">
+                    <h1 class="display-1 fw-bold mb-0" style="color: var(--accent-color);">{{ avg_rating }}</h1>
+                    <div class="text-warning mb-2">
+                        {% for i in range(avg_rating|int) %}
+                            <i class="fas fa-star"></i>
+                        {% endfor %}
+                        {% if avg_rating % 1 >= 0.5 %}
+                            <i class="fas fa-star-half-alt"></i>
+                        {% elif avg_rating|int < 5 %}
+                            <i class="far fa-star opacity-50"></i>
+                        {% endif %}
+                    </div>
+                    <p class="text-secondary mb-0">{{ total_count }} reviews</p>
+                </div>
+                <div class="col-md-8 px-4">
+                    {% for i in range(5, 0, -1) %}
+                    <div class="d-flex align-items-center mb-1">
+                        <span class="text-secondary me-2 small" style="width: 15px;">{{ i }}</span>
+                        <div class="progress flex-grow-1 bg-dark border border-secondary" style="height: 8px; border-radius: 4px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ distribution[i].percentage }}%; background-color: #ffc107; border-radius: 4px;" 
+                                 aria-valuenow="{{ distribution[i].percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="mb-4">Recent Reviews</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user me-2"></i>User</th>
+                            <th><i class="fas fa-car me-2"></i>Vehicle Number</th>
+                            <th><i class="fas fa-charging-station me-2"></i>Station</th>
+                            <th><i class="fas fa-star me-2"></i>Rating</th>
+                            <th><i class="fas fa-comment me-2"></i>Comment</th>
+                            <th><i class="fas fa-calendar-alt me-2"></i>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in feedbacks %}
+                        <tr>
+                            <td class="fw-bold">{{ feedback.user.username }}</td>
+                            <td class="fw-bold">{{ feedback.user.vehicle_no }}</td>
+                            <td>{{ feedback.station.name }}</td>
+                            <td>
+                                <div class="text-warning">
+                                     {{ feedback.rating|round(1) }}
+                                </div>
+                            </td>
+                            <td class="text-secondary">{{ feedback.comment }}</td>
+                            <td class="text-secondary small">{{ feedback.timestamp.strftime('%b %d, %Y') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-comment-slash fa-3x mb-3 text-secondary opacity-50"></i>
+                                <p class="text-secondary">No feedback received yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <!-- Submit Review Card -->
+        <div class="card p-4 mb-4">
+            <h2 class="mb-1">&#9889; Submit a Review</h2>
+            <p class="text-secondary mb-4 small">Share your experience at a charging station</p>
+            <form method="POST" action="{{ url_for('user.feedback') }}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select Station</label>
+                    <select name="station_id" class="form-select" required>
+                        <option value="" disabled selected>-- Choose a Station --</option>
+                        {% for station in stations %}
+                            <option value="{{ station.id }}">{{ station.name }} — {{ station.location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4 text-center">
+                    <label class="form-label fw-semibold d-block mb-3">Rate Your Experience</label>
+                    <!-- Unicode star rating — no Font Awesome dependency -->
+                    <div class="star-rating" id="starRating">
+                        <input type="radio" id="star5" name="rating" value="5" required />
+                        <label for="star5" title="5 stars">&#9733;</label>
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4" title="4 stars">&#9733;</label>
+                        <input type="radio" id="star3" name="rating" value="3" />
+                        <label for="star3" title="3 stars">&#9733;</label>
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2" title="2 stars">&#9733;</label>
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1" title="1 star">&#9733;</label>
+                    </div>
+                    <p class="text-secondary small mt-2" id="ratingText">Tap a star to rate</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Your Review</label>
+                    <textarea name="comment" class="form-control" rows="4"
+                        placeholder="Tell us about your experience at the station..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Submit Review</button>
+            </form>
+        </div>
+
+        <!-- My Reviews Section -->
+        {% if my_feedbacks %}
+        <div class="card p-4">
+            <h5 class="mb-3">My Reviews</h5>
+            {% for fb in my_feedbacks %}
+            <div class="d-flex gap-3 py-3 {% if not loop.last %}border-bottom border-secondary{% endif %}">
+                <div class="flex-shrink-0">
+                    <div style="width: 42px; height: 42px; background: var(--accent-color); border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem;">
+                        {{ current_user.username[0]|upper }}
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>{{ fb.station.name }}</strong>
+                        <small class="text-secondary">{{ fb.timestamp.strftime('%d %b %Y') }}</small>
+                    </div>
+                    <div class="mb-1" style="letter-spacing: 2px;">
+                        {% for i in range(fb.rating or 0) %}
+                            <span class="text-warning" style="font-size: 1rem;">&#9733;</span>
+                        {% endfor %}
+                        {% for i in range(5 - (fb.rating or 0)) %}
+                            <span class="text-secondary" style="font-size: 1rem;">&#9733;</span>
+                        {% endfor %}
+                    </div>
+                    {% if fb.comment %}
+                        <p class="mb-0 text-secondary small">{{ fb.comment }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    const ratingLabels = {1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Excellent'};
+    const ratingText = document.getElementById('ratingText');
+    document.querySelectorAll('.star-rating input').forEach(input => {
+        input.addEventListener('change', () => {
+            ratingText.textContent = ratingLabels[input.value] + ' — ' + input.value + ' star' + (input.value > 1 ? 's' : '');
+            ratingText.style.color = '#f09433';
+        });
+    });
+</script>
+
+{% endblock %}

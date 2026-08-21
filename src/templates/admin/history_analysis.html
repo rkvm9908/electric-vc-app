@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Analysis - EV Charge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-between align-items-center mb-4">
+    <div class="col">
+        <h2>Booking Analysis</h2>
+        <p class="text-secondary">Analyze completed bookings by station and user with clear insights.</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('admin.history') }}" class="btn btn-sm btn-secondary btn-back">Back to Filter</a>
+    </div>
+</div>
+
+<div class="card mb-4 analysis-card">
+    <div class="card-body">
+        <form method="post" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="stationId" class="form-label t-white">Select Station</label>
+                <select id="stationId" name="station_id" class="form-select">
+                    <option value="">All stations</option>
+                    {% for station in stations %}
+                        <option value="{{ station.id }}" {% if selected_station_id == station.id|string %}selected{% endif %}>{{ station.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="userId" class="form-label">Select User</label>
+                <select id="userId" name="user_id" class="form-select">
+                    <option value="">All users</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {% if selected_user_id == user.id|string %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary">Compute Insights</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if errors %}
+<div class="alert alert-warning">
+    <ul class="mb-0">
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if results %}
+<div class="row gy-4">
+    {% if results.selected_station %}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Station Analysis</h5>
+                <p class="text-muted">Selected station: <strong>{{ results.selected_station.name }}</strong></p>
+                {% if results.top_user_for_station %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3 h-100 analysis-metric">
+                            <p class="text-muted mb-1">Maximum bookings for a single user at this station</p>
+                            <h4>{{ results.top_user_for_station.count }}</h4>
+                            <p class="mb-0">User: <strong>{{ results.top_user_for_station.user.username }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3 h-100 analysis-metric">
+                            <p class="text-muted mb-1">Maximum bookings by a single user across all other stations</p>
+                            {% if results.top_user_across_other_stations %}
+                                <h4>{{ results.top_user_across_other_stations.count }}</h4>
+                                <p class="mb-0">User: <strong>{{ results.top_user_across_other_stations.user.username }}</strong></p>
+                            {% else %}
+                                <h4 class="mb-0">0</h4>
+                                <p class="mb-0 text-muted">No bookings found outside this station.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                    <p class="text-muted mb-0">No completed bookings were found for this station.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if results.selected_user %}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">User Analysis</h5>
+                <p class="text-muted">Selected user: <strong>{{ results.selected_user.username }}</strong></p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 h-100 analysis-metric">
+                            <p class="text-muted mb-1">Total bookings for this user</p>
+                            <h4>{{ results.selected_user_total_bookings or 0 }}</h4>
+                        </div>
+                    </div>
+                    {% if results.selected_user_bookings_at_station is not none %}
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 h-100 analysis-metric">
+                            <p class="text-muted mb-1">Bookings at selected station</p>
+                            <h4>{{ results.selected_user_bookings_at_station }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 h-100 analysis-metric">
+                            <p class="text-muted mb-1">Bookings across other stations</p>
+                            <h4>{{ results.selected_user_bookings_other_stations }}</h4>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Station</th>
+                                <th>Bookings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in results.selected_user_station_breakdown %}
+                                <tr>
+                                    <td>{{ item.station.name if item.station else 'Unknown station' }}</td>
+                                    <td>{{ item.count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
