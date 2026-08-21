@@ -18,3 +18,4 @@ tomli
 typing_extensions 
 Werkzeug          
 python-dotenv
+psycopg2
