@@ -14,5 +14,5 @@ tomli
 typing_extensions 
 Werkzeug          
 python-dotenv
-psycopg2
+psycopg2-binary
 cloudinary==1.40.0
