@@ -1,9 +1,18 @@
 import os
+import cloudinary
+import cloudinary.uploader
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.utils import secure_filename
 from models import db, User, Station, Slot, Branch, Booking, Feedback
 from datetime import datetime, time, timedelta
+
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
+)
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -127,14 +136,19 @@ def booking():
             flash('Selected time is outside operating hours.', 'danger')
             return redirect(url_for('user.booking', branch_id=selected_branch.id))
 
+        # SELECT ... FOR UPDATE: locks the matching row so that if two users
+        # hit this endpoint for the same slot at the same time, the second
+        # request waits until the first one's transaction commits (and by
+        # then the slot is no longer 'Available'), preventing double-booking.
         slot = Slot.query.filter_by(
             branch_id=selected_branch.id,
             status='Available',
             parent_slot_id=None,
             type=selected_vehicle
-        ).order_by(Slot.id).first()
+        ).order_by(Slot.id).with_for_update().first()
 
         if not slot:
+            db.session.rollback()
             flash(f'No available {selected_vehicle} slots at this branch.', 'danger')
             return redirect(url_for('user.booking', branch_id=selected_branch.id))
 
@@ -216,6 +230,16 @@ def confirm_booking(slot_id):
         if not date_str or not time_str:
             flash("Please select a valid date and time.", "danger")
             return redirect(url_for('user.confirm_booking', slot_id=slot_id))
+
+        # Re-fetch with a row lock and re-check availability: another user
+        # could have booked this exact slot between the GET above and this
+        # POST. Locking + re-checking prevents two people ending up with the
+        # same slot.
+        slot = Slot.query.filter_by(id=slot_id).with_for_update().first()
+        if not slot or slot.status != 'Available':
+            db.session.rollback()
+            flash("Sorry, this slot was just booked by someone else. Please pick another.", "danger")
+            return redirect(url_for('user.booking'))
 
         scheduled_start = datetime.fromisoformat(f"{date_str}T{time_str}")
         # Assume 1 hour duration for now
@@ -392,9 +416,20 @@ def profile():
         if 'profile_pic' in request.files:
             file = request.files['profile_pic']
             if file and file.filename != '':
-                filename = secure_filename(f"user_{current_user.id}_{file.filename}")
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                current_user.profile_pic = filename
+                try:
+                    upload_result = cloudinary.uploader.upload(
+                        file,
+                        folder="ev_charge/profile_pics",
+                        public_id=f"user_{current_user.id}",
+                        overwrite=True,
+                        resource_type="image"
+                    )
+                    # Store the full Cloudinary URL directly — templates using
+                    # this field as a URL (e.g. <img src="{{ current_user.profile_pic }}">)
+                    # will keep working without changes.
+                    current_user.profile_pic = upload_result['secure_url']
+                except Exception as e:
+                    flash(f"Profile picture upload failed: {e}", "danger")
         
         db.session.commit()
         flash("Profile updated!", "success")
@@ -427,4 +462,3 @@ def logout():
     logout_user()
     flash("Logged out.", "info")
     return redirect(url_for('home'))
-

@@ -19,3 +19,4 @@ typing_extensions
 Werkzeug          
 python-dotenv
 psycopg2
+cloudinary==1.40.0

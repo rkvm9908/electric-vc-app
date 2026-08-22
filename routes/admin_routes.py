@@ -223,21 +223,31 @@ def release_slot(slot_id):
     if current_user.role != 'admin':
         flash("Unauthorized access.", "danger")
         return redirect(url_for('admin.login'))
-    
+
+    # `slot` here is the PHYSICAL (parent) slot — it's the one shown in the
+    # admin slots list with status 'Occupied' / 'Confirmed'.
     slot = Slot.query.get_or_404(slot_id)
-    slot.status = 'Completed'
-    
-    if slot.parent_slot_id:
-        parent_slot = Slot.query.get(slot.parent_slot_id)
-        if parent_slot:
-            parent_slot.status = 'Available'
+
+    # The actual reservation is stored as a separate CHILD slot row
+    # (parent_slot_id == slot.id). That child row is what should move to
+    # 'Completed' — the physical slot itself should go back to 'Available'
+    # so it can be booked again.
+    child_slot = Slot.query.filter_by(
+        parent_slot_id=slot.id,
+        status='Booked'
+    ).order_by(Slot.id.desc()).first()
+
+    if child_slot:
+        child_slot.status = 'Completed'
+
+    slot.status = 'Available'
 
     booking = Booking.query.filter_by(slot_id=slot.id, status='Confirmed').first()
     if booking:
         booking.status = 'Completed'
-    
+
     db.session.commit()
-    flash(f"Slot at {slot.station.name} has been marked as Completed and parent availability restored.", "success")
+    flash(f"Slot at {slot.station.name} has been marked as Completed and is now Available again.", "success")
     return redirect(url_for('admin.slots'))
 @admin_bp.route('/confirm_slot/<int:slot_id>', methods=['POST'])
 @login_required
@@ -470,5 +480,3 @@ def logout():
     logout_user()
     flash("Admin logged out.", "info")
     return redirect(url_for('home'))
-
- 
