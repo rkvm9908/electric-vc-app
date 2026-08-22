@@ -473,7 +473,6 @@ def feedback():
 @login_required
 def profile():
     return render_template('admin/profile.html')
-
 @admin_bp.route('/logout')
 @login_required
 def logout():

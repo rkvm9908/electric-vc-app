@@ -13,9 +13,7 @@ cloudinary.config(
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
     secure=True
 )
-
 user_bp = Blueprint('user', __name__, url_prefix='/user')
-
 # =========================
 # AUTHENTICATION
 # =========================
