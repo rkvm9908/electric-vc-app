@@ -8,7 +8,13 @@ from routes.admin_routes import admin_bp
 
 load_dotenv()
 
-app = Flask(__name__, template_folder='src/templates')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'src', 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static'),
+    static_url_path='/static'
+)
 app.secret_key = os.environ.get('SECRET_KEY', 'ev_secret_key')
 app.config['GOOGLE_MAPS_API_KEY'] = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 

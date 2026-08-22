@@ -5,8 +5,8 @@
 {% block content %}
 <div class="row align-items-center mb-5">
     <div class="col-auto">
-        <img src="{{ url_for('static', filename='uploads/' + (current_user.profile_pic or 'default_profile.png')) }}" 
-             class="rounded-circle border border-secondary p-1" width="60" height="60" style="object-fit: cover;">
+        <img src="{{ current_user.profile_pic }}"
+            class="rounded-circle border border-secondary p-1" width="60" height="60" style="object-fit: cover;">
     </div>
     <div class="col">
         <h2 class="mb-0">Welcome back, {{ current_user.username }}!</h2>

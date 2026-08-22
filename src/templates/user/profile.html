@@ -5,7 +5,7 @@
 {% block content %}
 <div class="profile-header">
     <div class="profile-pic-container">
-        <img src="{{ url_for('static', filename='uploads/' + (current_user.profile_pic or 'default_profile.png')) }}"
+        <img src="{{ current_user.profile_pic }}"
             class="profile-pic" alt="Profile" style="object-fit: cover;">
     </div>
     <div class="profile-info">
