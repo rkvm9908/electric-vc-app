@@ -56,7 +56,7 @@ Use the following credentials to explore the application:
 
 ```
 Admin Login
-Email    : admin@gmail.com
+Email    : admin@evcharge.com
 Password : admin123
 
 User Login
